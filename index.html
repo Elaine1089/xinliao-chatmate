@@ -1,0 +1,502 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f6e9f4">
+  <meta name="description" content="心聊 ChatMate — 韓系療癒聊天回覆助手">
+  <link rel="manifest" href="./manifest.json">
+  <title>心聊 ChatMate</title>
+  <style>
+    :root{--bg:#fff9fc;--ink:#493d50;--muted:#8b7c91;--pink:#e9b8d8;--lav:#d9cff8;--card:#fff;--line:#f0e4ef;--accent:#9b75bd;--shadow:0 10px 28px rgba(120,82,130,.10)}
+    *{box-sizing:border-box} body{margin:0;background:radial-gradient(circle at top left,#f7e8f5 0,transparent 35%),linear-gradient(180deg,#fff8fc,#f8f5ff);font-family:system-ui,-apple-system,"Noto Sans TC",sans-serif;color:var(--ink);min-height:100vh}
+    .app{max-width:760px;margin:auto;padding:20px 16px 40px}.top{display:flex;justify-content:space-between;align-items:center;margin:4px 2px 20px}.brand{display:flex;gap:11px;align-items:center}.logo{width:46px;height:46px;border-radius:17px;background:linear-gradient(145deg,#efc9e4,#d7cafa);display:grid;place-items:center;font-size:24px;box-shadow:var(--shadow)}h1{font-size:20px;margin:0;letter-spacing:.3px}.subtitle{font-size:12px;color:var(--muted);margin-top:3px}.pill{font-size:11px;padding:7px 10px;border-radius:999px;background:#fff;border:1px solid var(--line);color:var(--accent)}
+    .hero{padding:23px 21px;border-radius:26px;background:linear-gradient(130deg,#f6dff0,#e9e3ff 80%);box-shadow:var(--shadow);position:relative;overflow:hidden;margin-bottom:18px}.hero:after{content:"✦";position:absolute;right:22px;top:7px;font-size:54px;color:#fff8;transform:rotate(15deg)}.hero h2{font-size:23px;margin:0 0 8px}.hero p{margin:0;color:#6d5c77;font-size:14px;line-height:1.65;max-width:85%}
+    .tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:18px 0}.tab{border:1px solid var(--line);background:#fff9;border-radius:15px;padding:12px 5px;color:var(--muted);font-size:13px;font-weight:650;cursor:pointer}.tab.active{background:#fff;border-color:#d7b6e5;color:#855fa7;box-shadow:0 5px 15px #c9a8d322}
+    .panel{background:var(--card);border:1px solid var(--line);border-radius:23px;padding:18px;box-shadow:var(--shadow);margin-bottom:16px}.label{font-weight:750;font-size:14px;margin:0 0 10px;display:block}.hint{font-size:12px;color:var(--muted);line-height:1.5;margin:7px 0 12px}
+    textarea,select,input{width:100%;border:1px solid #eaddec;border-radius:14px;background:#fffcff;padding:13px 14px;font:inherit;font-size:14px;color:var(--ink);outline:none}textarea{min-height:110px;resize:vertical}textarea:focus,select:focus{border-color:#c7a5df;box-shadow:0 0 0 3px #eadcf8}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:13px}.btn{border:0;border-radius:15px;padding:13px 16px;font-weight:750;font-size:14px;cursor:pointer;transition:transform .15s}.btn:active{transform:scale(.98)}.primary{background:linear-gradient(110deg,#d9b3e0,#c8baf5);color:#493553;width:100%;margin-top:14px}.secondary{background:#f8eff8;color:#8b639b;border:1px solid #f0e1f0}.smallbtn{padding:8px 11px;font-size:12px}
+    .results{display:grid;gap:11px}.reply{border:1px solid var(--line);border-radius:17px;padding:14px;background:linear-gradient(150deg,#fff,#fff9fd)}.replyhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}.tag{font-size:11px;background:#f5eafa;color:#8c66a3;padding:5px 8px;border-radius:999px}.reply p{font-size:14px;line-height:1.75;margin:0 0 11px;white-space:pre-wrap}.actions{display:flex;gap:7px;flex-wrap:wrap}.empty{font-size:13px;color:var(--muted);text-align:center;padding:18px 5px}.sectiontitle{font-size:16px;margin:0 0 12px}.quickgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.quick{padding:12px 10px;border:1px solid var(--line);background:#fff9fd;border-radius:14px;text-align:left;color:#6f5c78;font-size:13px;cursor:pointer}.quick span{display:block;font-size:19px;margin-bottom:5px}.foot{text-align:center;font-size:11px;color:#a091a7;line-height:1.7;padding:8px 12px}.notice{display:none;background:#fff4e7;border:1px solid #f2d9b9;border-radius:13px;padding:11px;font-size:12px;line-height:1.5;margin-top:12px;color:#7c6044}
+    @media(min-width:600px){.app{padding-top:28px}.hero{padding:28px}.hero h2{font-size:27px}.panel{padding:22px}}
+  </style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand"><div class="logo">💌</div><div><h1>心聊 ChatMate</h1><div class="subtitle">把心裡的話，溫柔地說出來</div></div></div>
+    <span class="pill" id="status">離線範本可用</span>
+  </header>
+  <section class="hero">
+    <h2>今天想怎麼回覆呢？ ✨</h2>
+    <p>不必急著找到完美答案。先把訊息放在這裡，我們一起想一個真誠又舒服的回應。</p>
+  </section>
+
+  <nav class="tabs" aria-label="聊天模式">
+    <button class="tab active" data-mode="reply">💬 智慧回覆</button>
+    <button class="tab" data-mode="coach">🌷 高情商教練</button>
+    <button class="tab" data-mode="heart">🧸 心情陪伴</button>
+  </nav>
+
+  <section class="panel">
+    <label class="label" for="message">對方說了什麼？／妳現在想說什麼？</label>
+    <textarea id="message" placeholder="把聊天內容貼在這裡……&#10;例如：妳最近都沒有找我，是不是不想理我了？"></textarea>
+    <div class="row">
+      <div><label class="label" for="tone">回覆語氣</label><select id="tone"><option value="溫柔">🌸 溫柔</option><option value="自然">☁️ 自然</option><option value="幽默">🍓 幽默</option><option value="堅定">🌿 堅定有界線</option><option value="可愛">🎀 可愛</option></select></div>
+      <div><label class="label" for="scene">聊天情境</label><select id="scene"><option>日常聊天</option><option>朋友相處</option><option>曖昧互動</option><option>拒絕別人</option><option>安慰對方</option><option>化解衝突</option><option>職場溝通</option></select></div>
+    </div>
+    <div class="row" style="margin-top:13px">
+      <div><label class="label" for="replyStyle">🎨 回覆風格</label>
+        <select id="replyStyle">
+          <option value="warm">溫柔體貼</option>
+          <option value="natural">自然口語</option>
+          <option value="humor">輕鬆幽默</option>
+          <option value="firm">堅定有界線</option>
+          <option value="sweet">可愛曖昧</option>
+        </select>
+      </div>
+      <div><label class="label" for="emotionSelect">💗 情緒辨識</label>
+        <select id="emotionSelect">
+          <option value="auto">自動辨識</option>
+          <option value="sad">難過／失落</option>
+          <option value="angry">生氣／不滿</option>
+          <option value="anxious">焦慮／擔心</option>
+          <option value="happy">開心／期待</option>
+          <option value="awkward">尷尬／冷場</option>
+          <option value="neutral">一般／不確定</option>
+        </select>
+      </div>
+    </div>
+    <div style="margin-top:12px;padding:12px;border:1px solid var(--line);border-radius:14px;background:#fff9fd">
+      <label style="display:flex;gap:8px;align-items:center;font-weight:700">
+        <input id="memoryEnabled" type="checkbox" checked style="width:auto"> 🧠 啟用本機對話記憶
+      </label>
+      <p class="hint" style="margin:6px 0 8px">記住最近 10 則訊息，僅儲存在這台裝置的瀏覽器。可隨時查看或清除。</p>
+      <div class="actions">
+        <button type="button" class="btn secondary smallbtn" id="showMemory">查看記憶</button>
+        <button type="button" class="btn secondary smallbtn" id="clearMemory">清除記憶</button>
+      </div>
+      <div id="memoryPanel" class="notice" style="display:none;margin-top:10px"></div>
+    </div>
+    <button class="btn primary" id="generate">✨ 幫我想回覆</button>
+    <div id="autoRecommendations" style="display:none;margin-top:14px">
+      <h3 class="sectiontitle">🎯 依照訊息推薦的離線回覆</h3>
+      <p class="hint">依關鍵字與情境關聯排序，最相關的範本會排在前面。</p>
+      <div id="recommendationList" class="results"></div>
+    </div>
+    <div class="notice" id="offlineNote">目前使用內建離線範本。若要依照每一段訊息進行真正的 AI 分析，之後需要設定安全的 AI 服務連線。</div>
+  </section>
+
+  <section class="panel">
+    <h3 class="sectiontitle">💗 快速情境</h3>
+    <div class="quickgrid">
+      <button class="quick" data-example="朋友說：「妳最近都沒有找我，是不是不想理我了？」"><span>🫶</span>朋友覺得被冷落</button>
+      <button class="quick" data-example="有人一直邀請我，但我其實不想去。"><span>🌿</span>想拒絕又怕失禮</button>
+      <button class="quick" data-example="我喜歡的人很久才回我訊息，我不知道怎麼接話。"><span>💗</span>曖昧聊天卡住</button>
+      <button class="quick" data-example="我覺得自己在團體裡不太被重視，心裡很難過。"><span>🧸</span>覺得委屈難過</button>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h3 class="sectiontitle">📚 離線常用回覆範本</h3>
+    <p class="hint">不需要連線也能挑選範本。可輸入關鍵字搜尋，或點選分類瀏覽；每則回覆都能複製、帶入編輯或收藏。</p>
+    <label class="label" for="templateSearch">🔎 搜尋情境或關鍵字</label>
+    <input id="templateSearch" type="search" placeholder="例如：被忽略、拒絕邀約、對方生氣、聊天冷場">
+    <div class="tabs" style="margin:10px 0 13px;grid-template-columns:repeat(4,minmax(0,1fr))">
+      <button class="tab active" data-template-category="comfort">🧸 安慰</button>
+      <button class="tab" data-template-category="refuse">🌿 拒絕</button>
+      <button class="tab" data-template-category="flirt">💗 曖昧</button>
+      <button class="tab" data-template-category="conflict">🕊️ 化解衝突</button>
+      <button class="tab" data-template-category="apology">🙏 道歉</button>
+      <button class="tab" data-template-category="encourage">🌟 鼓勵</button>
+      <button class="tab" data-template-category="seen">💬 已讀不回</button>
+      <button class="tab" data-template-category="endchat">🌙 結束聊天</button>
+    </div>
+    <div id="templateList" class="results"></div>
+  </section>
+
+  <section class="panel">
+    <div class="replyhead"><h3 class="sectiontitle" style="margin:0">🌸 為妳準備的回覆</h3><button class="btn secondary smallbtn" id="clear">清除</button></div>
+    <div id="results" class="results"><div class="empty">妳的回覆會出現在這裡。<br>可以先試試上面的快速情境。</div></div>
+  </section>
+
+  <section class="panel">
+    <div class="replyhead"><h3 class="sectiontitle" style="margin:0">⭐ 我的收藏</h3><span class="pill" id="savedCount">0 則</span></div>
+    <div id="saved" class="results"><div class="empty">喜歡的回覆可以按「收藏」保存。</div></div>
+  </section>
+  <footer class="foot">心聊 ChatMate · 給自己一點時間，也給關係一點溫柔。<br>目前版本的回覆範本儲存在此裝置；請避免貼上密碼、身分證號等敏感資料。</footer>
+</div>
+<script>
+const $ = s => document.querySelector(s);
+let mode='reply', saved=JSON.parse(localStorage.getItem('chatmate-saved')||'[]');
+document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');mode=b.dataset.mode;const t=$('#message');t.placeholder=mode==='heart'?'寫下妳現在的心情……':mode==='coach'?'貼上讓妳困擾的對話，或描述發生的事……':'把聊天內容貼在這裡……';}));
+document.querySelectorAll('.quick').forEach(b=>b.addEventListener('click',()=>{$('#message').value=b.dataset.example;window.scrollTo({top:0,behavior:'smooth'});}));
+function makeReplies(msg,tone,scene,mode){
+ const m=msg.toLowerCase();
+ if(mode==='heart') return [
+  ['先接住自己','聽起來這件事真的讓妳不好受。妳不需要立刻把情緒整理好，可以先承認自己現在很難過。'],
+  ['溫柔地整理','如果願意，可以試著說說：這件事裡最讓妳在意的部分是什麼？是被忽略、被誤會，還是付出沒有被看見？'],
+  ['下一小步','先不用急著做決定。給自己一點休息，再想想妳希望對方理解什麼，以及妳需要怎樣的對待。']
+ ];
+ if(mode==='coach') return [
+  ['先理解','先不用急著判斷誰對誰錯。可以先確認對方在意的點，再表達自己的感受與立場。'],
+  ['高情商回覆','我有聽到你的感受，也想讓你知道我的想法。我希望我們可以好好說清楚，而不是彼此猜測。'],
+  ['保留界線','我願意溝通，也在乎彼此的感受；但我希望我們能用尊重的方式討論這件事。']
+ ];
+ if(m.includes('不想理我')||m.includes('沒有找我')||m.includes('冷落')){
+  return [['溫柔型','沒有不想理妳啦！最近事情比較多，可能比較少主動聯絡，但我沒有忘記妳喔。'],['真誠型','謝謝妳願意跟我說。我沒想到妳會有被冷落的感覺，我們可以找時間好好聊聊。'],['自然型','最近真的有點忙，不是故意不找妳的！改天我們再聊聊近況呀。']];
+ }
+ if(m.includes('不想去')||m.includes('拒絕')||scene==='拒絕別人'){
+  return [['溫柔婉拒','謝謝你想到我、也邀請我！不過這次我就先不參加了，希望你們玩得開心。'],['清楚有禮','謝謝邀請，但我這次沒辦法答應，就先不去了。也謝謝你理解。'],['自然輕鬆','謝謝揪我～但這次我先 pass 啦！你們好好玩，之後有合適的機會再一起。']];
+ }
+ if(m.includes('很難過')||m.includes('委屈')||m.includes('不被重視')||mode==='heart'){
+  return [['溫柔表達','其實這件事讓我有點難過，因為我也很在意這段關係。我想把感受說出來，不是要責怪誰。'],['先照顧自己','我現在需要一點時間整理心情，等我比較平靜時，再好好聊聊這件事。'],['尋求理解','我想讓你知道，當時我有一點被忽略的感覺。我希望之後我們能多留意彼此的感受。']];
+ }
+ if(scene==='曖昧互動'||m.includes('喜歡的人')||m.includes('曖昧')){
+  return [['自然可愛','哈哈～那你呢？今天過得怎麼樣？😊'],['帶點俏皮','我剛剛還在想要回你什麼，結果就想到可以直接問你：最近有什麼新鮮事嗎？'],['溫柔延續','跟你聊天還蠻放鬆的～你最近有沒有什麼想做、但還沒去做的事？']];
+ }
+ if(scene==='安慰對方'){
+  return [['陪伴型','聽起來你真的辛苦了。如果你願意，我可以聽你慢慢說，不用急著整理好。'],['溫柔型','我可能沒辦法完全體會你的感受，但我在，也願意陪你一起想辦法。'],['實際支持','你現在比較想找人聽你說說，還是想一起想想接下來可以怎麼做？']];
+ }
+ return [
+  ['溫柔型',tone==='堅定'?'我理解你的想法，也想說說我的感受。我希望我們可以互相尊重，把事情好好講清楚。':'我懂你的意思，也謝謝你願意跟我說。其實我也有一些想法，想找個時間跟你聊聊。'],
+  ['自然型','嗯嗯，我知道了～謝謝你跟我說這些！那你後來是怎麼想的呢？'],
+  ['高情商型','我有認真看你說的，也想理解你的想法。如果你願意，我們可以再多聊一點，避免彼此誤會。']
+ ];
+}
+function renderReplies(items){
+ const box=$('#results');box.innerHTML='';
+ items.forEach(([label,txt])=>{const card=document.createElement('div');card.className='reply';const head=document.createElement('div');head.className='replyhead';const tag=document.createElement('span');tag.className='tag';tag.textContent=label;head.append(tag);const p=document.createElement('p');p.textContent=txt;const acts=document.createElement('div');acts.className='actions';const cp=document.createElement('button');cp.className='btn secondary smallbtn';cp.textContent='📋 複製';cp.onclick=async()=>{try{await navigator.clipboard.writeText(txt);cp.textContent='✓ 已複製';}catch(e){const ta=document.createElement('textarea');ta.value=txt;document.body.append(ta);ta.select();document.execCommand('copy');ta.remove();cp.textContent='✓ 已複製';}};const sv=document.createElement('button');sv.className='btn secondary smallbtn';sv.textContent='⭐ 收藏';sv.onclick=()=>{if(!saved.some(x=>x.text===txt)){saved.unshift({label,text:txt});localStorage.setItem('chatmate-saved',JSON.stringify(saved));renderSaved();sv.textContent='✓ 已收藏';}else sv.textContent='已收藏';};acts.append(cp,sv);card.append(head,p,acts);box.append(card);});
+}
+
+
+const MEMORY_KEY='chatmate-local-memory-v1';
+function readMemory(){
+ try { const data=JSON.parse(localStorage.getItem(MEMORY_KEY)||'[]'); return Array.isArray(data)?data:[]; }
+ catch(e){ return []; }
+}
+function saveMemory(items){
+ try { localStorage.setItem(MEMORY_KEY,JSON.stringify(items.slice(-10))); } catch(e){}
+}
+function remember(role,text,emotion,style){
+ const toggle=document.querySelector('#memoryEnabled');
+ if(!toggle || !toggle.checked) return;
+ const items=readMemory();
+ items.push({role:role,text:String(text||'').slice(0,500),emotion:emotion||'neutral',style:style||'warm',time:Date.now()});
+ saveMemory(items);
+}
+function detectEmotion(text,choice){
+ if(choice && choice!=='auto') return choice;
+ const groups={
+  sad:['難過','傷心','委屈','失望','孤單','被忽略','不被重視','想哭','低潮','心累','受傷','不開心','失落','辛苦'],
+  angry:['生氣','火大','氣死','不爽','吵架','責怪','討厭','憤怒','不尊重','不在乎','憑什麼','煩死'],
+  anxious:['焦慮','擔心','害怕','緊張','不知道怎麼辦','壓力','不安','猶豫','怕'],
+  happy:['開心','期待','好棒','太好了','興奮','喜歡','心動','哈哈','謝謝你','幸福'],
+  awkward:['冷場','尷尬','不知道怎麼回','已讀不回','沒話題','好冷淡','回很短','很久才回']
+ };
+ let best='neutral',max=0;
+ Object.keys(groups).forEach(em=>{let count=groups[em].filter(w=>String(text).includes(w)).length;if(count>max){max=count;best=em;}});
+ return best;
+}
+const EMOTION_LABELS={sad:'難過／失落',angry:'生氣／不滿',anxious:'焦慮／擔心',happy:'開心／期待',awkward:'尷尬／冷場',neutral:'一般／不確定'};
+const STYLE_LABELS={warm:'溫柔體貼',natural:'自然口語',humor:'輕鬆幽默',firm:'堅定有界線',sweet:'可愛曖昧'};
+function styleBonus(item,style){
+ let s=0;
+ if(style==='warm' && ['comfort','encourage'].includes(item.cat)) s+=2;
+ if(style==='natural' && /自然|簡短|輕鬆|日常|延續/.test(item.label+' '+item.text)) s+=2;
+ if(style==='humor' && /哈哈|害羞|俏皮|可愛|輕鬆/.test(item.label+' '+item.text)) s+=2;
+ if(style==='firm' && ['refuse','conflict'].includes(item.cat)) s+=3;
+ if(style==='sweet' && item.cat==='flirt') s+=4;
+ return s;
+}
+function emotionBonus(item,emotion){
+ const map={
+  sad:{comfort:5,encourage:3,conflict:1},
+  angry:{conflict:5,apology:3,refuse:1},
+  anxious:{comfort:4,encourage:4,conflict:1},
+  happy:{flirt:2,encourage:2,comfort:1},
+  awkward:{flirt:4,seen:3,endchat:2},
+  neutral:{}
+ };
+ let s=((map[emotion]||{})[item.cat]||0);
+ const t=item.label+' '+item.text;
+ if(emotion==='sad' && /陪|感受|難過|辛苦|休息|聽/.test(t)) s+=2;
+ if(emotion==='angry' && /冷靜|理解|聽你說|對不起|溝通/.test(t)) s+=2;
+ if(emotion==='awkward' && /話題|聊天|有空|晚安|再聊/.test(t)) s+=2;
+ return s;
+}
+document.querySelector('#showMemory').addEventListener('click',()=>{
+ const panel=document.querySelector('#memoryPanel'),items=readMemory();
+ panel.style.display='block';panel.innerHTML='';
+ if(!items.length){panel.textContent='目前沒有保存的對話記憶。';return;}
+ const title=document.createElement('p');title.textContent='最近保存的訊息（最多 10 則）：';panel.append(title);
+ items.forEach(it=>{const p=document.createElement('p');p.style.margin='6px 0';p.textContent=(it.role==='user'?'妳輸入：':'選用回覆：')+it.text;panel.append(p);});
+});
+document.querySelector('#clearMemory').addEventListener('click',()=>{
+ try{localStorage.removeItem(MEMORY_KEY);}catch(e){}
+ const panel=document.querySelector('#memoryPanel');panel.style.display='block';panel.textContent='已清除本機對話記憶。';
+});
+
+const keywordGroups = [
+ {cat:'comfort', terms:['難過','傷心','失落','委屈','壓力','辛苦','哭','低潮','不被重視','被忽略','沒人理解','失敗','自責','焦慮','擔心','累','孤單','安慰','心情不好'], weight:4},
+ {cat:'refuse', terms:['拒絕','不想去','不方便','沒辦法','不想答應','邀約','邀請','借錢','借東西','推銷','請託','不想分享','不想說','沒空','不願意','界線'], weight:4},
+ {cat:'flirt', terms:['曖昧','喜歡','心動','約會','聊天冷場','不知道怎麼接','已讀','晚回','回很短','稱讚','想約','想聊天','想他','想她','男朋友','女朋友','可愛'], weight:4},
+ {cat:'conflict', terms:['生氣','吵架','衝突','誤會','不高興','責怪','責備','受傷','不尊重','道歉','對不起','意見不同','被打斷','爭執','冷戰','不關心','不在乎','不理我','沒有找我','忽略我'], weight:4},
+ {cat:'apology', terms:['道歉','對不起','疏忽','做錯','傷害','補救','失約'], weight:3},
+ {cat:'encourage', terms:['加油','沒信心','失敗','考試','工作不順','比較','努力','放棄','害怕','改變'], weight:3},
+ {cat:'seen', terms:['已讀不回','沒回訊息','不回我','晚回','回很慢','訊息沒回'], weight:3},
+ {cat:'endchat', terms:['晚安','先睡','要休息','結束聊天','先忙','不打擾','下次聊','先這樣'], weight:3}
+];
+function scoreTemplate(message, cat, label, text, tone, scene) {
+ const msg=(message||'').toLowerCase();
+ const hay=(label+' '+text+' '+cat).toLowerCase();
+ let score=0;
+ const compact=s=>s.replace(/[\\s，。！？、,.!?：:「」『』（）()]/g,'');
+ const cm=compact(msg), ch=compact(hay);
+ // Match category-related terms, then label/text overlap.
+ keywordGroups.forEach(g=>{
+   if(g.cat===cat) g.terms.forEach(term=>{if(msg.includes(term)) score+=g.weight;});
+ });
+ const stop=new Set(['我','你','妳','他','她','我們','你們','就是','真的','覺得','可以','怎麼','什麼','一個','這個','那個','因為','所以','但是','希望','對方','朋友','訊息','說','想','要','有','沒有','不是','很','了','嗎','呢','啊','喔','啦','吧','都','也','在','跟','和','的','是']);
+ const tokens=(message.match(/[\\u4e00-\\u9fff]{2,}|[a-zA-Z]{3,}/g)||[]).filter(w=>!stop.has(w));
+ tokens.forEach(token=>{
+   if(label.includes(token)) score+=4;
+   if(text.includes(token)) score+=2;
+   if(hay.includes(token)) score+=1;
+ });
+ // Phrase overlap: exact multi-character segments are strong signals.
+ for(let n=4;n>=2;n--){
+   for(let i=0;i<=cm.length-n;i++){
+     const part=cm.slice(i,i+n);
+     if(ch.includes(part)) score += n>=4 ? 2.5 : 1;
+   }
+ }
+ const categoryMap={'安慰':'comfort','朋友相處':'conflict','曖昧互動':'flirt','拒絕別人':'refuse','安慰對方':'comfort','化解衝突':'conflict','職場溝通':'conflict','日常聊天':'all'};
+ if(categoryMap[scene]===cat) score+=2;
+ if(tone==='堅定' && ['refuse','conflict'].includes(cat)) score+=0.5;
+ return score;
+}
+function getAllOfflineTemplates(){
+ const all=[];
+ Object.keys(offlineTemplates).forEach(cat=>(offlineTemplates[cat]||[]).forEach(([label,text])=>all.push({cat,label,text})));
+ return all;
+}
+function recommendOfflineTemplates(message,tone,scene,style='warm',emotionChoice='auto'){
+ const all=getAllOfflineTemplates();
+ const emotion=detectEmotion(message,emotionChoice);
+ const memory=document.querySelector('#memoryEnabled').checked ? readMemory() : [];
+ const recent=memory.slice(-4).map(x=>x.text).join(' ');
+ const ranked=all.map(t=>{
+   const item={...t};
+   let score=scoreTemplate(message,t.cat,t.label,t.text,tone,scene);
+   score+=emotionBonus(item,emotion)*1.5+styleBonus(item,style);
+   if(recent) score+=scoreTemplate(recent,t.cat,t.label,t.text,tone,scene)*0.25;
+   return {...item,score,emotion,style};
+ }).sort((a,b)=>b.score-a.score);
+ const picked=ranked.filter(x=>x.score>0).slice(0,5);
+ return {items:picked.length?picked:ranked.slice(0,3),emotion:emotion,style:style};
+}
+function renderRecommendations(items,emotion='neutral',style='warm'){
+ const wrap=$('#autoRecommendations'), box=$('#recommendationList');
+ box.innerHTML='';wrap.style.display='block';
+ const summary=document.createElement('p');summary.className='hint';summary.textContent='情緒判斷：'+(EMOTION_LABELS[emotion]||emotion)+'　｜　推薦語氣：'+(STYLE_LABELS[style]||style);box.append(summary);
+ const names={comfort:'安慰',refuse:'拒絕',flirt:'曖昧',conflict:'化解衝突',apology:'道歉',encourage:'鼓勵',seen:'已讀不回',endchat:'結束聊天'};
+ items.forEach((item,index)=>{
+  const card=document.createElement('div');card.className='reply';
+  const head=document.createElement('div');head.className='replyhead';
+  const tags=document.createElement('div');tags.style.display='flex';tags.style.gap='6px';tags.style.flexWrap='wrap';
+  const tag=document.createElement('span');tag.className='tag';tag.textContent=(index===0?'⭐ 最推薦':'推薦 '+(index+1));
+  const cat=document.createElement('span');cat.className='tag';cat.textContent=(names[item.cat]||item.cat)+' · '+item.label;
+  tags.append(tag,cat);head.append(tags);
+  const p=document.createElement('p');p.textContent=item.text;
+  const acts=document.createElement('div');acts.className='actions';
+  const cp=document.createElement('button');cp.className='btn secondary smallbtn';cp.textContent='📋 複製';
+  cp.onclick=async()=>{try{await navigator.clipboard.writeText(item.text);cp.textContent='✓ 已複製';}catch(e){const ta=document.createElement('textarea');ta.value=item.text;document.body.append(ta);ta.select();document.execCommand('copy');ta.remove();cp.textContent='✓ 已複製';}};
+  const use=document.createElement('button');use.className='btn secondary smallbtn';use.textContent='✍️ 帶入編輯';use.onclick=()=>{remember('assistant',item.text,item.emotion,item.style);$('#message').value=item.text;window.scrollTo({top:0,behavior:'smooth'});$('#message').focus();};
+  const save=document.createElement('button');save.className='btn secondary smallbtn';save.textContent='⭐ 收藏';
+  save.onclick=()=>{if(!saved.some(x=>x.text===item.text)){saved.unshift({label:item.label,text:item.text});localStorage.setItem('chatmate-saved',JSON.stringify(saved));renderSaved();save.textContent='✓ 已收藏';}else save.textContent='已收藏';};
+  acts.append(cp,use,save);card.append(head,p,acts);box.append(card);
+ });
+}
+
+$('#generate').onclick=()=>{
+ const msg=$('#message').value.trim();
+ if(!msg){$('#message').focus();$('#message').placeholder='先輸入一段訊息，或選擇下方快速情境喔～';return;}
+ const style=document.querySelector('#replyStyle').value;
+ const emotionChoice=document.querySelector('#emotionSelect').value;
+ const emotion=detectEmotion(msg,emotionChoice);
+ remember('user',msg,emotion,style);
+ $('#offlineNote').style.display='block';
+ renderReplies(makeReplies(msg,$('#tone').value,$('#scene').value,mode));
+ const rec=recommendOfflineTemplates(msg,$('#tone').value,$('#scene').value,style,emotionChoice);
+ renderRecommendations(rec.items,rec.emotion,rec.style);
+};
+$('#clear').onclick=()=>{$('#results').innerHTML='<div class="empty">妳的回覆會出現在這裡。<br>可以先試試上面的快速情境。</div>';};
+
+const offlineTemplates = {
+ comfort: [
+  ["陪你說說","聽起來你真的辛苦了。如果你願意，我可以聽你慢慢說，不用急著整理好。"],
+  ["溫柔支持","我可能沒辦法完全體會你的感受，但我在，也願意陪你一起面對。"],
+  ["不急著給建議","你現在不需要馬上振作也沒關係。先好好休息一下，我們一步一步來。"],
+  ["肯定感受","你會這樣難過一定有原因，不用覺得自己太敏感。你的感受值得被好好聽見。"],
+  ["詢問需要","你現在比較想找人聽你說說，還是希望我陪你一起想想辦法？"],
+  ["鼓勵打氣","你已經努力很久了，今天先做到這裡也可以。慢慢來，不用什麼事都一個人扛。"],
+  ["失落時","事情沒有照期待發展，失望是很正常的。給自己一點時間，不必急著假裝沒事。"],
+  ["朋友低潮","我不知道怎麼做才能讓你立刻好起來，但我願意陪著你。想聊的時候，隨時可以找我。"],
+  ["被比較時","每個人的步調都不一樣，我想先專注在自己的路上。謝謝你關心我。"],
+  ["覺得沒人理解","你不一定要現在就解釋清楚。我願意聽你說，也尊重你需要時間。"],
+  ["對方自責","先別急著把所有錯都攬在自己身上，我們可以一起看看事情到底是怎麼發生的。"]
+ ],
+ refuse: [
+  ["溫柔婉拒","謝謝你想到我、也邀請我！不過這次我就先不參加了，希望你們玩得開心。"],
+  ["清楚有禮","謝謝你的邀請，但我這次沒辦法答應，就先不去了。也謝謝你理解。"],
+  ["拒絕借東西","不好意思，這次我不太方便借出，希望你能理解。"],
+  ["拒絕邀約","謝謝你約我～不過我最近想把時間留給自己，這次先不約了，下次有機會再說。"],
+  ["不想透露私事","這件事我暫時不太想聊，等我準備好了再跟你分享，謝謝你關心。"],
+  ["拒絕加工作","我理解這件事很重要，但我目前的工作量已經排滿了，可能沒辦法再接下來。"],
+  ["堅定界線","我知道你是好意，但這件事我已經決定了，希望你尊重我的選擇。"],
+  ["不想勉強","我想誠實跟你說，我沒有辦法答應不是真心想做的事，所以這次先不勉強自己了。"],
+  ["拒絕聚會","謝謝你邀請我！我這次想在家休息，就不過去了，希望你們玩得開心。"],
+  ["拒絕推銷","謝謝介紹，不過我目前沒有需求，就先不考慮了。"],
+  ["拒絕臨時請託","不好意思，這次時間上真的配合不了，可能沒辦法幫忙。"]
+ ],
+ flirt: [
+  ["自然開話題","哈哈～那你呢？今天過得怎麼樣？😊"],
+  ["可愛接話","跟你聊天還蠻放鬆的～你最近有沒有什麼新鮮事想分享？"],
+  ["輕鬆關心","你今天忙得還好嗎？記得忙歸忙，也要吃飯休息喔。"],
+  ["帶點俏皮","你這樣說，我有點不知道怎麼回了啦 😂"],
+  ["自然稱讚","你很會找話題耶，跟你聊天時間一下就過去了。"],
+  ["試探邀約","有機會的話，要不要一起去喝杯咖啡？感覺可以聊很多。"],
+  ["對方很晚回","沒事～你忙完再回就好。希望你今天一切順利！"],
+  ["想延續聊天","對了，我突然想到一件事想問你：如果有一天放假，你最想去哪裡走走？"],
+  ["對方稱讚你","你這樣說我會害羞耶～不過還是謝謝你，今天心情變好了。"],
+  ["想自然關心","今天有沒有發生什麼讓你開心的小事？想聽你分享～"],
+  ["對方回很短","哈哈懂～那我換個問題：最近有沒有什麼讓你很上癮的事？"]
+ ],
+ conflict: [
+  ["先降溫","我不希望我們越說越生氣。要不要先冷靜一下，等彼此比較平靜時再聊？"],
+  ["表達感受","我不是想責怪你，只是當時那樣的情況讓我有點受傷，所以想把感受說清楚。"],
+  ["確認理解","我想確認一下，我理解的意思是……你是這樣想的嗎？我不希望我們因為誤會而吵架。"],
+  ["承認疏忽","如果我的做法讓你不舒服，我願意聽你說，也會想想自己可以怎麼調整。"],
+  ["說明立場","我理解你有你的考量，也希望你能聽聽我的想法。我們可以不同意，但還是好好說話。"],
+  ["修復關係","這段關係對我有一定的重要性，我不想只為了爭輸贏而忽略彼此。我們一起想想怎麼處理，好嗎？"],
+  ["道歉並改善","對不起，這件事是我沒有注意到你的感受。謝謝你告訴我，我會記得，也會努力改善。"],
+  ["設定界線","我願意好好溝通，但希望我們不要用責備或嘲諷的方式說話。這樣我才能更清楚地聽懂你。"],
+  ["對方誤會你","我想這裡可能有點誤會，我不是那個意思。我可以再說清楚，也想聽聽你怎麼理解的。"],
+  ["意見不同","我們看法不一樣也沒關係，不一定要馬上分出對錯。我想找一個彼此都能接受的方式。"],
+  ["被打斷時","我想把剛剛的話說完，再聽你的想法，可以嗎？我希望我們都有機會表達。"]
+ ],
+ apology: [
+  ["真誠道歉","對不起，這件事是我沒有處理好，讓你不舒服了。我會認真記住，也會努力改進。"],
+  ["不找藉口","我想先跟你說聲對不起。無論我當時怎麼想，造成你的感受不好就是我需要正視的事。"],
+  ["不小心說重話","剛剛我的語氣可能太重了，對不起。我不是想傷害你，我會注意自己的表達方式。"],
+  ["忘記約定","對不起，我忘記了我們說好的事，讓你失望了。這是我的疏忽，我會想辦法避免再發生。"],
+  ["工作上的疏失","這次是我沒有確認清楚，造成你的困擾，真的很抱歉。我會盡快補救並確認後續。"],
+  ["想修復關係","我很在意我們的關係，也不希望這件事一直卡在心裡。如果你願意，我想聽聽你的感受並好好補救。"],
+  ["給對方時間","我已經向你道歉，也理解你可能還需要一點時間。我不會催你原諒，等你準備好再談也可以。"],
+  ["簡短道歉","對不起，這次是我疏忽了。謝謝你提醒我，我會改進。"],
+  ["道歉後補救","除了跟你道歉，我也想把事情補救好。你覺得我接下來先做哪一步比較合適？"]
+ ],
+ encourage: [
+  ["努力被看見","我知道你真的很努力了，就算現在還沒看到結果，這些付出也不是白費的。"],
+  ["面對挑戰","不用一次把所有事情都做好，先完成眼前的一小步，就已經是在前進了。"],
+  ["考試或工作加油","你已經準備了這麼久，現在就一步一步來，盡力就好。我相信你能好好面對。"],
+  ["失敗後打氣","一次不順利不代表你不夠好，只是這次的結果不如預期。休息一下，再重新出發也不遲。"],
+  ["建立信心","你可能還沒發現自己做得多好了，但我看得到你的用心。請給自己多一點肯定。"],
+  ["陪伴打氣","如果你覺得累了，可以先休息，不用一直逞強。我會替你加油，也願意聽你說。"],
+  ["新開始","新的開始不需要完美，只要願意踏出第一步，就值得為自己拍拍手。"],
+  ["溫柔提醒","不要只拿自己和別人比較，每個人的步調都不同。照著自己的節奏慢慢走就好。"],
+  ["面對改變","改變一開始可能會不習慣，但你不需要一下子就做到完美，願意嘗試已經很棒了。"]
+ ],
+ seen: [
+  ["輕鬆確認","嗨～不知道你最近是不是比較忙，等你有空再回就好 😊"],
+  ["自然帶過","沒關係，你忙完再聊就好～希望你最近一切順利！"],
+  ["想確認對方意願","想確認一下，你是最近比較忙，還是暫時不太方便聊天呢？都可以直接跟我說喔。"],
+  ["不施加壓力","不用急著回覆我，等你方便、也有心情的時候再聊就好。"],
+  ["保留自尊","我先去忙自己的事啦，有空再聊。祝你今天順利！"],
+  ["對方常常不回","我發現我們最近比較少聊了。如果你最近比較忙或不太想聊天，也可以坦白跟我說，我會尊重。"],
+  ["工作訊息追蹤","想再確認一下前面那則訊息是否有收到，方便時再請你回覆，謝謝。"],
+  ["不再追問","我先不打擾你了，等你有空再說。照顧好自己喔。"],
+  ["避免過度猜測","我先不急著猜原因，也不想給你壓力。等你方便時再回覆就好。"]
+ ],
+ endchat: [
+  ["自然收尾","好啦，那我們先聊到這裡～祝你今天順順利利，有空再聊！"],
+  ["準備休息","我差不多要去休息了，今天聊得很開心，晚安 🌙"],
+  ["禮貌結束","謝謝你跟我分享這些，我先去處理一下事情，之後有機會再聊。"],
+  ["忙碌中離開","我現在要先忙一下，可能沒辦法繼續回訊息，晚點再聊喔。"],
+  ["曖昧收尾","今天跟你聊天很開心～我先去忙啦，下次再聽你分享 😊"],
+  ["不想繼續話題","我知道你的意思了，謝謝你跟我說。我想先停在這裡，讓自己整理一下想法。"],
+  ["設定界線","我想我們今天先聊到這裡，這個話題讓我有點累，之後有需要再找時間談。"],
+  ["溫柔道晚安","時間不早了，早點休息吧。希望你今晚睡得好，晚安～"],
+  ["禮貌結束爭論","我想我們現在可能很難取得共識，先停在這裡吧。等大家冷靜後，再看看是否需要繼續討論。"]
+ ]
+,
+ apology: [
+  ["簡短道歉","對不起，這次是我疏忽了。謝謝你提醒我，我會改進。"],
+  ["道歉並補救","剛剛我的語氣可能不太好，對不起。我在意的是這件事，不是想讓你難受。"],
+  ["承認影響","我知道這件事讓你不舒服，這是我需要負責的地方。對不起，我會更留意。"],
+  ["提出補救","除了跟你道歉，我也想把事情補救好。你覺得我接下來先做哪一步比較合適？"]
+ ],
+ encourage: [
+  ["溫柔打氣","你已經努力很久了，今天先做到這裡也可以。慢慢來，不用什麼事都一個人扛。"],
+  ["面對失敗","一次不順利不代表你不夠好。先休息一下，再慢慢找出下一步就好。"],
+  ["不必比較","每個人的步調都不一樣，先專注在自己的路上就好。你正在前進，這就很重要。"]
+ ],
+ seen: [
+  ["不施加壓力","沒事～你忙完再回就好。希望你今天一切順利！"],
+  ["自然關心","想確認你有沒有看到我前面的訊息，不急，有空再回覆就好。"],
+  ["停止追問","我先不打擾你了，等你有空再說。照顧好自己喔。"]
+ ],
+ endchat: [
+  ["溫柔道晚安","時間不早了，早點休息吧。希望你今晚睡得好，晚安～"],
+  ["自然收尾","好啦，那我們先聊到這裡，有空再聊！"],
+  ["禮貌結束爭論","我想我們現在可能很難取得共識，先停在這裡吧。等大家冷靜後，再看看是否需要繼續討論。"]
+ ]
+};
+function renderOfflineTemplates(category='comfort', query=''){
+ const box=document.querySelector('#templateList'); if(!box)return;
+ box.innerHTML='';
+ const q=(query||'').trim().toLowerCase();
+ const categoryNames={comfort:'安慰',refuse:'拒絕',flirt:'曖昧',conflict:'化解衝突',apology:'道歉',encourage:'鼓勵',seen:'已讀不回',endchat:'結束聊天'};
+ const cats=category==='all'?Object.keys(offlineTemplates):[category];
+ const entries=[];
+ cats.forEach(cat=>(offlineTemplates[cat]||[]).forEach(([label,txt])=>{
+   const haystack=(cat+' '+(categoryNames[cat]||'')+' '+label+' '+txt).toLowerCase();
+   if(!q || haystack.includes(q) || q.split(/\s+/).some(word=>word && haystack.includes(word))) entries.push({cat,label,txt});
+ }));
+ if(!entries.length){box.innerHTML='<div class="empty">找不到符合的範本。可以試試「難過」、「拒絕」、「誤會」、「道歉」或「晚安」。</div>';return;}
+ entries.forEach(({cat,label,txt})=>{
+   const card=document.createElement('div');card.className='reply';
+   const head=document.createElement('div');head.className='replyhead';
+   const tags=document.createElement('div');tags.style.display='flex';tags.style.gap='6px';tags.style.flexWrap='wrap';
+   const tag=document.createElement('span');tag.className='tag';tag.textContent=label;
+   const catTag=document.createElement('span');catTag.className='tag';catTag.textContent=categoryNames[cat]||cat;
+   tags.append(tag,catTag);head.append(tags);
+   const p=document.createElement('p');p.textContent=txt;
+   const acts=document.createElement('div');acts.className='actions';
+   const cp=document.createElement('button');cp.className='btn secondary smallbtn';cp.textContent='📋 複製';
+   cp.onclick=async()=>{try{await navigator.clipboard.writeText(txt);cp.textContent='✓ 已複製';}catch(e){const ta=document.createElement('textarea');ta.value=txt;document.body.append(ta);ta.select();document.execCommand('copy');ta.remove();cp.textContent='✓ 已複製';}};
+   const use=document.createElement('button');use.className='btn secondary smallbtn';use.textContent='✍️ 帶入編輯';
+   use.onclick=()=>{$('#message').value=txt;window.scrollTo({top:0,behavior:'smooth'});$('#message').focus();};
+   const save=document.createElement('button');save.className='btn secondary smallbtn';save.textContent='⭐ 收藏';
+   save.onclick=()=>{if(!saved.some(x=>x.text===txt)){saved.unshift({label,text:txt});localStorage.setItem('chatmate-saved',JSON.stringify(saved));renderSaved();save.textContent='✓ 已收藏';}else save.textContent='已收藏';};
+   acts.append(cp,use,save);card.append(head,p,acts);box.append(card);
+ });
+}
+let activeTemplateCategory='comfort';
+document.querySelectorAll('[data-template-category]').forEach(b=>b.addEventListener('click',()=>{
+ document.querySelectorAll('[data-template-category]').forEach(x=>x.classList.remove('active'));
+ b.classList.add('active');activeTemplateCategory=b.dataset.templateCategory;
+ renderOfflineTemplates(activeTemplateCategory,$('#templateSearch').value);
+}));
+$('#templateSearch').addEventListener('input',()=>{
+ const query=$('#templateSearch').value;
+ renderOfflineTemplates(query.trim()?'all':activeTemplateCategory,query);
+});
+
+function renderSaved(){const box=$('#saved');$('#savedCount').textContent=saved.length+' 則';box.innerHTML='';if(!saved.length){box.innerHTML='<div class="empty">喜歡的回覆可以按「收藏」保存。</div>';return;}saved.forEach((x,i)=>{const card=document.createElement('div');card.className='reply';const tag=document.createElement('span');tag.className='tag';tag.textContent=x.label;const p=document.createElement('p');p.style.marginTop='9px';p.textContent=x.text;const btn=document.createElement('button');btn.className='btn secondary smallbtn';btn.textContent='移除收藏';btn.onclick=()=>{saved.splice(i,1);localStorage.setItem('chatmate-saved',JSON.stringify(saved));renderSaved();};card.append(tag,p,btn);box.append(card);});}
+renderSaved();
+renderOfflineTemplates('comfort');
+if('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('./sw.js').then(()=>{$('#status').textContent='可加入主畫面';}).catch(()=>{});
+</script>
+</body>
+</html>

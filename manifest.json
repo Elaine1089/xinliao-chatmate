@@ -1,0 +1,11 @@
+{
+  "name": "心聊 ChatMate",
+  "short_name": "心聊",
+  "description": "韓系療癒聊天回覆助手",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#fff8fc",
+  "theme_color": "#f6e9f4",
+  "icons": []
+}
