@@ -40,6 +40,21 @@
   <section class="panel">
     <label class="label" for="message">對方說了什麼？／妳現在想說什麼？</label>
     <textarea id="message" placeholder="把聊天內容貼在這裡……&#10;例如：妳最近都沒有找我，是不是不想理我了？"></textarea>
+    <div id="coachFields" class="notice" style="display:none;background:#fbf6ff;border-color:#e7d9f2;color:#6b5677">
+      <strong>🌷 高情商教練專屬設定</strong>
+      <p class="hint">這裡會先分析情境，再提供溝通策略與話術；若未連接 AI 服務，會使用本機引導分析，不會假裝是真正的 AI。</p>
+      <label class="label" for="coachGoal">妳希望達成什麼？</label>
+      <select id="coachGoal"><option>理解對方的態度</option><option>拉近彼此距離</option><option>化解誤會或衝突</option><option>表達自己的委屈</option><option>設立健康界線</option><option>婉拒對方又不失禮</option><option>確認關係與期待</option></select>
+      <label class="label" for="coachContext" style="margin-top:12px">補充關係或背景（選填）</label>
+      <textarea id="coachContext" style="min-height:70px" placeholder="例如：對方是曖昧對象，最近回覆變慢；我不想逼問，但希望知道如何溝通。"></textarea>
+      <details style="margin-top:10px"><summary style="cursor:pointer;font-weight:700">進階：設定安全的 AI 服務網址</summary>
+        <p class="hint">需填入妳自己的安全後端 API 網址。請勿把 OpenAI API 金鑰放在這個網頁或公開 GitHub 專案中。</p>
+        <input id="aiEndpoint" type="url" placeholder="https://妳的安全後端網址/coach">
+        <button type="button" class="btn secondary smallbtn" id="saveEndpoint" style="margin-top:8px">儲存服務網址</button>
+        <p class="hint">服務需接受 POST JSON：message、goal、context、tone；並回傳 JSON：analysis、strategy、replies（文字陣列）、caution。</p>
+      </details>
+      <div id="coachStatus" class="hint" style="margin-top:8px">目前尚未連接 AI 服務。</div>
+    </div>
     <div class="row">
       <div><label class="label" for="tone">回覆語氣</label><select id="tone"><option value="溫柔">🌸 溫柔</option><option value="自然">☁️ 自然</option><option value="幽默">🍓 幽默</option><option value="堅定">🌿 堅定有界線</option><option value="可愛">🎀 可愛</option></select></div>
       <div><label class="label" for="scene">聊天情境</label><select id="scene"><option>日常聊天</option><option>朋友相處</option><option>曖昧互動</option><option>拒絕別人</option><option>安慰對方</option><option>化解衝突</option><option>職場溝通</option></select></div>
@@ -128,7 +143,7 @@
 <script>
 const $ = s => document.querySelector(s);
 let mode='reply', saved=JSON.parse(localStorage.getItem('chatmate-saved')||'[]');
-document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');mode=b.dataset.mode;const t=$('#message');t.placeholder=mode==='heart'?'寫下妳現在的心情……':mode==='coach'?'貼上讓妳困擾的對話，或描述發生的事……':'把聊天內容貼在這裡……';}));
+document.querySelectorAll('.tab[data-mode]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.tab[data-mode]').forEach(x=>x.classList.remove('active'));b.classList.add('active');mode=b.dataset.mode;const t=$('#message');t.placeholder=mode==='heart'?'寫下妳現在的心情……':mode==='coach'?'描述讓妳困擾的對話或事情；教練會先分析情境，再提供策略……':'把聊天內容貼在這裡……';$('#coachFields').style.display=mode==='coach'?'block':'none';$('#generate').textContent=mode==='coach'?'🌷 開始高情商分析':mode==='heart'?'🧸 陪我整理心情':'✨ 幫我想回覆';$('#offlineNote').textContent=mode==='coach'?'未連接安全 AI 服務時，會使用本機引導分析；只有成功連接服務後才會進行真正的 AI 分析。':'目前使用內建離線範本。深入的個別化 AI 分析需要安全的 AI 服務連線。';}));
 document.querySelectorAll('.quick').forEach(b=>b.addEventListener('click',()=>{$('#message').value=b.dataset.example;window.scrollTo({top:0,behavior:'smooth'});}));
 function makeReplies(msg,tone,scene,mode){
  const m=msg.toLowerCase();
@@ -318,9 +333,42 @@ function renderRecommendations(items,emotion='neutral',style='warm'){
  });
 }
 
-$('#generate').onclick=()=>{
+const AI_ENDPOINT_KEY='chatmate-coach-endpoint-v1';
+const endpointInput=$('#aiEndpoint');
+if(endpointInput) endpointInput.value=localStorage.getItem(AI_ENDPOINT_KEY)||'';
+$('#saveEndpoint').onclick=()=>{const value=$('#aiEndpoint').value.trim();if(value){try{const u=new URL(value);if(u.protocol!=='https:'){alert('請使用 HTTPS 的安全服務網址。');return;}}catch(e){alert('請輸入有效的完整網址。');return;}localStorage.setItem(AI_ENDPOINT_KEY,value);$('#coachStatus').textContent='已儲存服務網址。真正 AI 分析將在服務連線成功時使用。';}else{localStorage.removeItem(AI_ENDPOINT_KEY);$('#coachStatus').textContent='已清除服務網址，目前使用本機引導分析。';}};
+function renderCoachReport(data, sourceLabel){
+ const box=$('#results');box.innerHTML='';
+ const add=(title,content)=>{if(!content)return;const card=document.createElement('div');card.className='reply';const h=document.createElement('div');h.className='replyhead';const tag=document.createElement('span');tag.className='tag';tag.textContent=title;h.append(tag);const p=document.createElement('p');p.textContent=Array.isArray(content)?content.join('\n'):String(content);card.append(h,p);box.append(card);};
+ add('🧭 情境分析',data.analysis);add('🌿 建議策略',data.strategy);
+ if(Array.isArray(data.replies)) data.replies.slice(0,3).forEach((r,i)=>add(['💬 回覆建議一','💬 回覆建議二','💬 回覆建議三'][i],typeof r==='string'?r:(r.text||JSON.stringify(r))));
+ add('🪴 溫柔提醒',data.caution||'單憑一段訊息無法確定對方真正的想法，可以透過後續互動與清楚溝通來確認。');
+ const badge=document.createElement('p');badge.className='hint';badge.textContent=sourceLabel;box.prepend(badge);
+}
+function localCoachReport(msg){
+ const goal=$('#coachGoal').value, context=$('#coachContext').value.trim();
+ const m=msg.toLowerCase();let analysis='目前資訊有限，還不能確定對方真正的想法。先把「已知事實」和「自己的猜測」分開，避免只憑單一句話下結論。';
+ if(/不想理我|不回|已讀|冷淡|不找我/.test(m)) analysis='妳可能在意對方的回覆頻率或主動程度。這確實可能讓人不安，但原因可能很多，不能只憑回覆慢就認定對方不在乎。';
+ else if(/生氣|吵架|誤會|不爽|責怪/.test(m)) analysis='這段互動可能帶有情緒或立場差異。先釐清雙方各自在意什麼，再討論具體事件，比急著爭對錯更容易讓對話往前走。';
+ else if(/拒絕|不想去|不方便|不願意/.test(m)) analysis='妳似乎需要在顧及對方感受與尊重自己意願之間取得平衡。拒絕不需要過度解釋，清楚、禮貌而一致就可以。';
+ const strategy=goal.includes('界線')?'先說明自己的感受與界線，再提出可接受的相處方式；不需要為合理需求過度道歉。':goal.includes('拉近')?'先表達關心或好奇，提出一個容易回答的問題；讓互動有來有往，不必一次要求對方表態。':goal.includes('衝突')?'用「我感覺……，因為……，我希望……」表達自己，並邀請對方補充他的看法。':goal.includes('委屈')?'描述具體事件和自己的感受，避免使用「你每次都……」等容易引發防衛的概括語句。':goal.includes('婉拒')?'先簡短表達謝意，再清楚說明這次無法答應；不必提供太多理由，也不用承諾自己做不到的事。':'先描述觀察到的事，不急著猜測動機；用開放式問題確認對方的想法，再說明妳真正希望了解或改變的地方。';
+ const replies=[`我想先了解你的想法，不想只靠猜測來理解這件事。你願意跟我說說嗎？`,`我在意我們的互動，也想誠實說說自己的感受。我希望我們可以好好聊聊，理解彼此的想法。`,`我尊重你的感受，也希望自己的感受能被聽見。我們可以找個適合的時間，把這件事說清楚。`];
+ if(goal.includes('婉拒')){replies[0]='謝謝你想到我，不過這次我沒辦法答應，希望你能理解。';replies[1]='謝謝邀請我，但我這次就先不參加了，祝你們玩得開心！';}
+ if(goal.includes('界線')){replies[0]='我願意好好溝通，但這件事也有我在意的界線，希望我們可以互相尊重。';}
+ return {analysis:analysis+(context?'\n補充背景已收到：'+context:'') ,strategy,replies,caution:'這是本機規則式引導，不是真正的 AI 分析。請把它當作思考起點，依實際關係與情境調整。'};
+}
+async function runCoach(msg){
+ const endpoint=localStorage.getItem(AI_ENDPOINT_KEY);
+ if(endpoint){
+  $('#coachStatus').textContent='正在連接 AI 服務…';
+  try{const response=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:msg,goal:$('#coachGoal').value,context:$('#coachContext').value.trim(),tone:$('#tone').value})});if(!response.ok)throw new Error('HTTP '+response.status);const data=await response.json();if(!data||!data.analysis||!data.strategy||!Array.isArray(data.replies))throw new Error('回傳格式不符合要求');renderCoachReport(data,'🌐 來源：已連接的 AI 服務');$('#coachStatus').textContent='AI 分析完成。';return;}catch(e){$('#coachStatus').textContent='AI 服務連線失敗，已改用本機引導分析。請確認服務網址、CORS 與回傳格式。';}
+ }
+ renderCoachReport(localCoachReport(msg),'📴 來源：本機引導模式（未連接 AI）');
+}
+$('#generate').onclick=async()=>{
  const msg=$('#message').value.trim();
  if(!msg){$('#message').focus();$('#message').placeholder='先輸入一段訊息，或選擇下方快速情境喔～';return;}
+ if(mode==='coach'){ $('#offlineNote').style.display='block'; await runCoach(msg); return; }
  const style=document.querySelector('#replyStyle').value;
  const emotionChoice=document.querySelector('#emotionSelect').value;
  const emotion=detectEmotion(msg,emotionChoice);
